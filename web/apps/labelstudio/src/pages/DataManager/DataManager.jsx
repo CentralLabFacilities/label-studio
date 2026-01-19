@@ -153,8 +153,17 @@ export const DataManagerPage = ({ ...props }) => {
     if (interactiveBacked) {
       dataManager.on("lsf:regionFinishedDrawing", (reg, group) => {
         const { lsf, task, currentAnnotation: annotation } = dataManager.lsf;
-        const ids = group.map((r) => r.cleanId);
-        const result = annotation.serializeAnnotation().filter((res) => ids.includes(res.id));
+
+        if (!annotation) return;
+
+        const allowedTypes = ["keypointlabels", "rectanglelabels"];
+        
+        const result = annotation.results
+          .filter(r => allowedTypes.includes(r.type))
+          .map(r => r.serialize())
+          .filter(Boolean);
+      
+        if (result.length === 0) return;
 
         const suggestionsRequest = api.callApi("mlInteractive", {
           params: { pk: interactiveBacked.id },
